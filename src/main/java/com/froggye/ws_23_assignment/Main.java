@@ -1,18 +1,6 @@
 package com.froggye.ws_23_assignment;
 
-import com.froggye.ws_23_assignment.Replacement;
-
 import java.io.IOException;
-import java.net.URL;
-import java.util.Scanner;
-import javax.net.ssl.HttpsURLConnection;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.core.type.TypeReference;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Collections;
@@ -25,59 +13,45 @@ public class Main {
     public static void main(String[] args) throws IOException {
         
         ArrayList<String> data = new ArrayList<String>();
-        List<Replacement> replacement = new ArrayList<Replacement>();
+        ArrayList<Replacement> replacement = new ArrayList<Replacement>();
+        
+        JsonParser parser = new JsonParser();
         
         
         // === получить data.json ===
-        
-        URL urlObj = new URL("https://raw.githubusercontent.com/thewhitesoft/student-2023-assignment/main/data.json");
-        HttpsURLConnection connection = (HttpsURLConnection)urlObj.openConnection();
-        connection.setRequestMethod("GET");
-        
-        int responceCode = connection.getResponseCode();
-        
-        if (responceCode == HttpsURLConnection.HTTP_OK) {
-            StringBuilder sb = new StringBuilder();
-            Scanner scanner = new Scanner(connection.getInputStream());
-            while (scanner.hasNext()) {
-                sb.append(scanner.nextLine());
-            }
-            
-            // data - массив строк сообщений
-            ObjectMapper objectMapper = new ObjectMapper();
-            data = objectMapper.readValue(String.valueOf(sb), 
-                    new TypeReference<ArrayList<String>>() {});
-            
-            scanner.close();
-            
-        } else {
-            System.out.println("Ошибка HTTP GET запроса");
+         
+        data = parser.readURL("https://raw.githubusercontent.com/thewhitesoft/student-2023-assignment/main/data.json",
+                String.class);
+        if (data == null) 
+        {
             System.exit(1);
         }
-        
        
         
         // === прочитать replacement.json ===
-        
-        // replacement - массив объектов класса Replacement
-        ObjectMapper or = new ObjectMapper();
-        try {
 
-            Main instance = new Main();
-            InputStream is = instance.getFileAsIOStream("replacement.json");
-            
-            
-            replacement = or.readValue(
-                //new File("replacement.json"), 
-                is,
-                new TypeReference<List<Replacement>>() {});
-            //replacement.forEach(x -> System.out.println(x.toString()));
-        }
-        catch (FileNotFoundException e){
-            System.out.println("Ошибка чтения файла");
+        replacement = parser.readLocal("replacement.json", Replacement.class);
+        if (replacement == null) 
+        {
+            System.exit(1);
+        }   
+        
+        
+        // === сделать замены ===
+        
+        data = makeReplacements(data, replacement);
+        
+        
+        // === записать результат в result.json ===
+        
+        if (!parser.writeFile(data)){
             System.exit(1);
         }
-               
+        
+    }
+    
+    
+    private static ArrayList<String> makeReplacements (ArrayList<String> data, ArrayList<Replacement> replacement) {
         
         // === очистить replacement от повторов ===
         
@@ -109,44 +83,27 @@ public class Main {
         // === произвести оставшиеся замены ===
         
         for (int dataIndex = 0; dataIndex < data.size(); dataIndex++) {
-
+            String currentData = data.get(dataIndex);
+            
             for (int replacementIndex = 0; replacementIndex < uniqueReplacement.size(); replacementIndex++) {
-                if (data.get(dataIndex).contains(uniqueReplacement.get(replacementIndex).getReplacement())) { 
-                    data.set(dataIndex, (data.get(dataIndex)
-                            .replace(uniqueReplacement.get(replacementIndex).getReplacement(), 
-                                    uniqueReplacement.get(replacementIndex).getSource())));     //etDataMessage(replacementList.get(index).getSource());
+                String currentReplacement = uniqueReplacement.get(replacementIndex).getReplacement();
+                
+                if (currentData.contains(currentReplacement))
+                { 
+                    String currentSource = uniqueReplacement.get(replacementIndex)
+                                        .getSource();
+                    // В data[dataIndex]: подстроку Replacement заменить на Source
+                    currentData = currentData.replace(
+                            currentReplacement,
+                            currentSource);
+                    
+                    data.set(dataIndex, currentData);
                 }
+                
             }
+        }
+        
+        return data;
+    }
 
-        }
-        
-        //System.out.println(data.toString());
-        
-        
-        
-        // === записать результат в result.json ===
-        
-        try {
-            ObjectMapper ow = new ObjectMapper();
-            ow.writeValue(new File("result.json"), data);
-        } catch (IOException e) {
-            System.out.println("Ошибка записи файла");
-            System.exit(1);
-        }
-        
-    }
-    
-    
-    
-    private InputStream getFileAsIOStream(final String fileName) 
-    {
-        InputStream ioStream = this.getClass()
-            .getClassLoader()
-            .getResourceAsStream(fileName);
-        
-        if (ioStream == null) {
-            throw new IllegalArgumentException(fileName + " is not found");
-        }
-        return ioStream;
-    }
 }
