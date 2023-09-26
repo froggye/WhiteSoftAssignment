@@ -1,12 +1,15 @@
-
 # :sparkles: Тестовое задание :sparkles:
 
 ## Задание
-Размещено на [GitHub](https://github.com/thewhitesoft/student-2023-assignment).
+Размещено на [GitHub](https://github.com/thewhitesoft/student-2023-assignment/tree/main).
 
 ## Инструкция для запуска
-Щёлкнуть по файлу target/WS2023.jar или запустить из командной строки:
+Запустить файл target/WS2023.jar
+
+Щёлкнуть по файлу или через командную строку:
+
 ```
-–java –jar WS2023.jar
+java -jar WS2023.jar
 ```
-Для запуска файла необходим установленный [JRE](https://www.java.com/en/download/)
+
+Для запуска файла необходим установленный [JRE](https://www.java.com/ru/download/)
