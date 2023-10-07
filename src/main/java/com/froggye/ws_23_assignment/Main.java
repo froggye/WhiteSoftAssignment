@@ -2,7 +2,6 @@ package com.froggye.ws_23_assignment;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Collections;
 import java.util.stream.Collectors;
 
@@ -11,28 +10,27 @@ import java.util.stream.Collectors;
 public class Main {
     
     public static void main(String[] args) throws IOException {
-        
-        ArrayList<String> data = new ArrayList<String>();
-        ArrayList<Replacement> replacement = new ArrayList<Replacement>();
-        
+                
         JsonParser parser = new JsonParser();
         
         
         // === получить data.json ===
          
-        data = parser.readURL("https://raw.githubusercontent.com/thewhitesoft/student-2023-assignment/main/data.json",
+        ArrayList<String> data = parser.readURL("https://raw.githubusercontent.com/thewhitesoft/student-2023-assignment/main/data.json",
                 String.class);
         if (data == null) 
         {
+            System.out.println("Ошибка HTTP GET запроса");
             System.exit(1);
         }
        
         
         // === прочитать replacement.json ===
 
-        replacement = parser.readLocal("replacement.json", Replacement.class);
+        ArrayList<Replacement> replacement = parser.readLocal("replacement.json", Replacement.class);
         if (replacement == null) 
         {
+            System.out.println("Ошибка чтения файла");
             System.exit(1);
         }   
         
@@ -56,50 +54,29 @@ public class Main {
         // === очистить replacement от повторов ===
         
         Collections.reverse(replacement);
-        List<Replacement> uniqueReplacement = replacement
+        replacement = replacement
                 .stream()
                 .distinct()
-                .collect(Collectors.toList());
+                .collect(Collectors.toCollection(ArrayList::new));
                 
         //Collections.reverse(uniqueReplacement);
         
         
-        // === удалить поля null ===
+        // === обработать оставшиеся replacement ===
         
-        for (Replacement item : uniqueReplacement) {
-            if (item.getSource() == null) {
-                for (int i = 0; i < data.size(); i++) {
-                    if (data.get(i).contains(item.getReplacement())) {
-                        data.remove(i);
-                        if (i != 0)
-                            i -= 1; 
-                    }
-                }
-
-            }
-        }
-        
-        
-        // === произвести оставшиеся замены ===
-        
-        for (int dataIndex = 0; dataIndex < data.size(); dataIndex++) {
-            String currentData = data.get(dataIndex);
+        for (Replacement item : replacement) {
+            String currentSource = item.getSource();
+            String currentReplacement = item.getReplacement();
             
-            for (int replacementIndex = 0; replacementIndex < uniqueReplacement.size(); replacementIndex++) {
-                String currentReplacement = uniqueReplacement.get(replacementIndex).getReplacement();
-                
-                if (currentData.contains(currentReplacement))
-                { 
-                    String currentSource = uniqueReplacement.get(replacementIndex)
-                                        .getSource();
-                    // В data[dataIndex]: подстроку Replacement заменить на Source
-                    currentData = currentData.replace(
-                            currentReplacement,
-                            currentSource);
-                    
-                    data.set(dataIndex, currentData);
-                }
-                
+            // === удалить поля из data, где replacement должен быть null ===
+            if (currentSource == null) {
+                data = data.stream()
+                        .filter(s -> !s.contains(currentReplacement))
+                        .collect(Collectors.toCollection(ArrayList::new));
+            }
+            // === иначе заменить все подстроки ===
+            else {
+                data.replaceAll(s -> s.replace(currentReplacement, currentSource));
             }
         }
         

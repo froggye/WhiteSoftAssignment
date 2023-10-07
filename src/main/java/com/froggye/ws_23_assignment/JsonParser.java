@@ -55,10 +55,8 @@ public class JsonParser {
                     String.valueOf(sb), 
                     t.constructCollectionType(ArrayList.class,itemType));
         } else {
-            System.out.println("Ошибка HTTP GET запроса: " 
-                    + String.valueOf(responceCode) + " responce");
+            return null;
         }
-        return null;
     }
     
     // прочитать из файла
@@ -74,9 +72,8 @@ public class JsonParser {
                     t.constructCollectionType(ArrayList.class,itemType));
         }
         catch (FileNotFoundException e){
-            System.out.println("Ошибка чтения файла");
+            return null;
         }
-        return null;
     }
     
     // получить поток ввода из файла внутри проекта

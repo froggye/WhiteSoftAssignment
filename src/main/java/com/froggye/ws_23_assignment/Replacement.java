@@ -29,7 +29,7 @@ public class Replacement {
         this.source = source;
     }
 
-    // переопределение метода для удаления дубликатов
+    // переопределение метода для удаления дубликатов (distinct())
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -51,6 +51,7 @@ public class Replacement {
             return false;
         return true;
     }
+    
     @Override
     public int hashCode() {
         return Objects.hash(replacement);
